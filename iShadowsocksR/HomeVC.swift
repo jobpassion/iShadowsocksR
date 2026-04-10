@@ -59,7 +59,6 @@ class HomeVC: FormViewController, UINavigationControllerDelegate, HomePresenterP
     // MARK: - HomePresenter Protocol
 
     func handleRefreshUI() {
-        NSLog("[VPN][UI] handleRefreshUI group=%@ isDefault=%@ managerStatus=%@", presenter.group.name, presenter.group.isDefault.description, String(describing: Manager.sharedManager.vpnStatus))
         if presenter.group.isDefault {
             status = Manager.sharedManager.vpnStatus
         }else {
@@ -84,7 +83,6 @@ class HomeVC: FormViewController, UINavigationControllerDelegate, HomePresenterP
     }
 
     func updateConnectButton(by value: VPNStatus) {
-        NSLog("[VPN][UI] updateConnectButton status=%@", String(describing: value))
         connectButton.isEnabled = [VPNStatus.on, VPNStatus.off].contains(value)
         connectButton.setTitleColor(UIColor.init(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0), for: UIControlState())
         switch value {
@@ -200,14 +198,12 @@ class HomeVC: FormViewController, UINavigationControllerDelegate, HomePresenterP
     // MARK: - Private Actions
 
     @objc func handleConnectButtonPressed() {
-        NSLog("[VPN][UI] handleConnectButtonPressed currentStatus=%@", String(describing: status))
         if status == .on {
             status = .disconnecting
         }else {
             status = .connecting
         }
         presenter.switchVPN{ (error) in
-            NSLog("[VPN][UI] handleConnectButtonPressed completion error=%@", String(describing: error))
             if error != nil {
                 self.status = .off
             }

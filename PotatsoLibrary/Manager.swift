@@ -30,8 +30,6 @@ public let kDefaultGroupIdentifier = "defaultGroup"
 public let kDefaultGroupName = "defaultGroupName"
 private let statusIdentifier = "status"
 public let kProxyServiceVPNStatusNotification = "kProxyServiceVPNStatusNotification"
-private let kLastTunnelEventIdentifier = "lastTunnelEvent"
-private let kLastTunnelErrorIdentifier = "lastTunnelError"
 
 open class Manager {
     
@@ -52,13 +50,9 @@ open class Manager {
     }()
 
     fileprivate init() {
-        NSLog("[VPN] Manager init")
         loadProviderManager { (manager) -> Void in
             if let manager = manager {
-                NSLog("[VPN] Manager init loaded provider, status=%@", self.stringFromVPNStatus(manager.connection.status))
                 self.updateVPNStatus(manager)
-            } else {
-                NSLog("[VPN] Manager init found no provider manager")
             }
         }
         addVPNStatusObserver()
@@ -72,30 +66,23 @@ open class Manager {
             if let observer = self.statusObserver {
                 NotificationCenter.default.removeObserver(observer)
                 self.statusObserver = nil
-                NSLog("[VPN] Removed previous status observer")
             }
             guard let manager = manager else {
-                NSLog("[VPN] addVPNStatusObserver no manager, set status off")
                 self.vpnStatus = .off
                 return
             }
-            NSLog("[VPN] addVPNStatusObserver bind manager, status=%@", self.stringFromVPNStatus(manager.connection.status))
             self.updateVPNStatus(manager)
             self.statusObserver = NotificationCenter.default.addObserver(forName: NSNotification.Name.NEVPNStatusDidChange, object: manager.connection, queue: OperationQueue.main, using: { [weak self, weak manager] _ -> Void in
                 guard let self = self else {
                     return
                 }
                 if let manager = manager {
-                    NSLog("[VPN] NEVPNStatusDidChange received, status=%@", self.stringFromVPNStatus(manager.connection.status))
                     self.updateVPNStatus(manager)
                 } else {
-                    NSLog("[VPN] NEVPNStatusDidChange received but manager released, reload provider manager")
                     self.loadProviderManager { manager in
                         if let manager = manager {
-                            NSLog("[VPN] Reloaded provider after status change, status=%@", self.stringFromVPNStatus(manager.connection.status))
                             self.updateVPNStatus(manager)
                         } else {
-                            NSLog("[VPN] Reloaded provider after status change but found nil manager")
                             self.vpnStatus = .off
                         }
                     }
@@ -119,16 +106,6 @@ open class Manager {
     }
     
     func updateVPNStatus(_ manager: NEVPNManager) {
-        NSLog("[VPN] updateVPNStatus old=%@ new=%@", String(describing: vpnStatus), stringFromVPNStatus(manager.connection.status))
-        if manager.connection.status == .disconnecting || manager.connection.status == .disconnected {
-            let defaults = AppProfile.sharedUserDefaults()
-            if let lastEvent = defaults.string(forKey: kLastTunnelEventIdentifier) {
-                NSLog("[VPN] last tunnel event=%@", lastEvent)
-            }
-            if let lastError = defaults.string(forKey: kLastTunnelErrorIdentifier) {
-                NSLog("[VPN] last tunnel error=%@", lastError)
-            }
-        }
         switch manager.connection.status {
         case .connected:
             self.vpnStatus = .on
@@ -144,24 +121,17 @@ open class Manager {
     open func switchVPN(_ completion: ((NETunnelProviderManager?, Error?) -> Void)? = nil) {
         loadProviderManager { [unowned self] (manager) in
             if let manager = manager {
-                NSLog("[VPN] switchVPN loaded manager, status=%@", self.stringFromVPNStatus(manager.connection.status))
                 self.updateVPNStatus(manager)
-            } else {
-                NSLog("[VPN] switchVPN found no manager, current cached status=%@", String(describing: self.vpnStatus))
             }
             let current = self.vpnStatus
-            NSLog("[VPN] switchVPN current cached status=%@", String(describing: current))
             guard current != .connecting && current != .disconnecting else {
-                NSLog("[VPN] switchVPN ignored because status is transitional")
                 return
             }
             if current == .off {
-                NSLog("[VPN] switchVPN startVPN")
                 self.startVPN(nil) { (manager, error) -> Void in
                     completion?(manager, error)
                 }
             }else {
-                NSLog("[VPN] switchVPN stopVPN")
                 self.stopVPN()
                 completion?(nil, nil)
             }
@@ -456,43 +426,33 @@ extension Manager {
     }
 
     public func startVPN(_ options: [String : NSObject]?, complete: ((NETunnelProviderManager?, Error?) -> Void)? = nil) {
-        NSLog("[VPN] startVPN begin")
         // regenerate config files
         do {
             try Manager.sharedManager.regenerateConfigFiles()
-            NSLog("[VPN] startVPN regenerateConfigFiles success")
         }catch {
-            NSLog("[VPN] startVPN regenerateConfigFiles failed: %@", String(describing: error))
             complete?(nil, error)
             return
         }
         // Load provider
         loadAndCreateProviderManager { (manager, error) -> Void in
             if let error = error {
-                NSLog("[VPN] startVPN loadAndCreateProviderManager failed: %@", String(describing: error))
                 complete?(nil, error)
             }else{
                 guard let manager = manager else {
-                    NSLog("[VPN] startVPN loadAndCreateProviderManager returned nil manager")
                     complete?(nil, ManagerError.invalidProvider)
                     return
                 }
                 self.addVPNStatusObserver(manager)
-                NSLog("[VPN] startVPN manager ready, status=%@", self.stringFromVPNStatus(manager.connection.status))
                 if manager.connection.status == .disconnected || manager.connection.status == .invalid {
                     do {
-                        NSLog("[VPN] startVPN calling startVPNTunnel")
                         try manager.connection.startVPNTunnel(options: options)
-                        NSLog("[VPN] startVPN startVPNTunnel returned successfully, status=%@", self.stringFromVPNStatus(manager.connection.status))
                         self.updateVPNStatus(manager)
                         complete?(manager, nil)
                     }catch {
-                        NSLog("[VPN] startVPN startVPNTunnel threw error: %@", String(describing: error))
                         self.updateVPNStatus(manager)
                         complete?(nil, error)
                     }
                 }else{
-                    NSLog("[VPN] startVPN skipped startVPNTunnel because status=%@", self.stringFromVPNStatus(manager.connection.status))
                     self.updateVPNStatus(manager)
                     complete?(manager, nil)
                 }
@@ -504,10 +464,8 @@ extension Manager {
         // Stop provider
         loadProviderManager { (manager) -> Void in
             guard let manager = manager else {
-                NSLog("[VPN] stopVPN found no manager")
                 return
             }
-            NSLog("[VPN] stopVPN calling stopVPNTunnel, status=%@", self.stringFromVPNStatus(manager.connection.status))
             manager.connection.stopVPNTunnel()
         }
     }
@@ -529,16 +487,13 @@ extension Manager {
     }
     
     fileprivate func loadAndCreateProviderManager(_ complete: @escaping (NETunnelProviderManager?, Error?) -> Void ) {
-        NSLog("[VPN] loadAndCreateProviderManager begin")
         NETunnelProviderManager.loadAllFromPreferences { [unowned self] (managers, error) -> Void in
             if let managers = managers {
                 let manager: NETunnelProviderManager
                 if managers.count > 0 {
                     manager = managers[0]
-                    NSLog("[VPN] loadAndCreateProviderManager reuse existing manager, count=%ld status=%@", managers.count, self.stringFromVPNStatus(manager.connection.status))
                 }else{
                     manager = self.createProviderManager()
-                    NSLog("[VPN] loadAndCreateProviderManager created new manager")
                 }
                 manager.isEnabled = true
                 manager.localizedDescription = AppEnv.appName
@@ -549,23 +504,18 @@ extension Manager {
                 manager.onDemandRules = [quickStartRule]
                 manager.saveToPreferences(completionHandler: { (error) -> Void in
                     if let error = error {
-                        NSLog("[VPN] loadAndCreateProviderManager saveToPreferences failed: %@", String(describing: error))
                         complete(nil, error)
                     }else{
-                        NSLog("[VPN] loadAndCreateProviderManager saveToPreferences success")
                         manager.loadFromPreferences(completionHandler: { (error) -> Void in
                             if let error = error {
-                                NSLog("[VPN] loadAndCreateProviderManager loadFromPreferences failed: %@", String(describing: error))
                                 complete(nil, error)
                             }else{
-                                NSLog("[VPN] loadAndCreateProviderManager loadFromPreferences success, status=%@", self.stringFromVPNStatus(manager.connection.status))
                                 complete(manager, nil)
                             }
                         })
                     }
                 })
             }else{
-                NSLog("[VPN] loadAndCreateProviderManager loadAllFromPreferences failed: %@", String(describing: error))
                 complete(nil, error)
             }
         }
@@ -576,13 +526,9 @@ extension Manager {
             if let managers = managers {
                 if managers.count > 0 {
                     let manager = managers[0]
-                    NSLog("[VPN] loadProviderManager success, count=%ld status=%@", managers.count, self.stringFromVPNStatus(manager.connection.status))
                     complete(manager)
                     return
                 }
-                NSLog("[VPN] loadProviderManager success but manager list is empty")
-            } else {
-                NSLog("[VPN] loadProviderManager failed, error=%@", String(describing: error))
             }
             complete(nil)
         }
@@ -591,26 +537,6 @@ extension Manager {
     fileprivate func createProviderManager() -> NETunnelProviderManager {
         let manager = NETunnelProviderManager()
         manager.protocolConfiguration = NETunnelProviderProtocol()
-        NSLog("[VPN] createProviderManager created NETunnelProviderManager")
         return manager
-    }
-
-    fileprivate func stringFromVPNStatus(_ status: NEVPNStatus) -> String {
-        switch status {
-        case .invalid:
-            return "invalid"
-        case .disconnected:
-            return "disconnected"
-        case .connecting:
-            return "connecting"
-        case .connected:
-            return "connected"
-        case .reasserting:
-            return "reasserting"
-        case .disconnecting:
-            return "disconnecting"
-        @unknown default:
-            return "unknown"
-        }
     }
 }

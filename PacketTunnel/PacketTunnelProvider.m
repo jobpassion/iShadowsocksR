@@ -22,8 +22,6 @@
 #import "serverConnectivity.h"
 
 #define REQUEST_CACHED @"requestsCached"    // Indicate that recent requests need update
-#define LAST_TUNNEL_EVENT @"lastTunnelEvent"
-#define LAST_TUNNEL_ERROR @"lastTunnelError"
 
 #if DEBUG
 #define WAIT_TIME      20000
@@ -48,39 +46,12 @@
     NSInteger _socksProxyPort;
 }
 
-- (void)recordTunnelEvent:(NSString *)event {
-    NSLog(@"[PacketTunnel] %@", event);
-    [[AppProfile sharedUserDefaults] setObject:event forKey:LAST_TUNNEL_EVENT];
-    [[AppProfile sharedUserDefaults] synchronize];
-}
-
-- (void)recordTunnelError:(NSError *)error context:(NSString *)context {
-    NSString *message;
-    if (error) {
-        message = [NSString stringWithFormat:@"%@: %@", context, error.localizedDescription ?: error.description];
-    } else {
-        message = context;
-    }
-    NSLog(@"[PacketTunnel][Error] %@", message);
-    [[AppProfile sharedUserDefaults] setObject:message forKey:LAST_TUNNEL_ERROR];
-    [[AppProfile sharedUserDefaults] synchronize];
-}
-
-- (void)clearTunnelDiagnostics {
-    [[AppProfile sharedUserDefaults] removeObjectForKey:LAST_TUNNEL_EVENT];
-    [[AppProfile sharedUserDefaults] removeObjectForKey:LAST_TUNNEL_ERROR];
-    [[AppProfile sharedUserDefaults] synchronize];
-}
-
 - (void)startTunnelWithOptions:(NSDictionary *)options completionHandler:(void (^)(NSError *))completionHandler {
     [self openLog];
     NSLog(@"starting potatso tunnel...");
-    [self clearTunnelDiagnostics];
-    [self recordTunnelEvent:@"startTunnelWithOptions begin"];
     [self updateUserDefaults];
     NSError *error = [[TunnelInterface sharedInterface] setupWithPacketTunnelFlow:self.packetFlow];
     if (error) {
-        [self recordTunnelError:error context:@"setupWithPacketTunnelFlow failed"];
         completionHandler(error);
         exit(1);
         return;
@@ -92,19 +63,14 @@
     
     if (profile.server.length==0 || profile.serverPort==0) {
         NSError *profileError = [NSError errorWithDomain:@"iShadowsocksR" code:-1 userInfo:@{NSLocalizedDescriptionKey:@"server address or port error"}];
-        [self recordTunnelError:profileError context:@"profile validation failed"];
         completionHandler(profileError);
         return;
     }
     
     if (serverConnectivity(profile.server.UTF8String, (int)profile.serverPort, 10000) != 0){
-        NSError *connectivityError = [NSError errorWithDomain:@"iShadowsocksR" code:-1 userInfo:@{NSLocalizedDescriptionKey:@"serverConnectivity"}];
-        [self recordTunnelError:connectivityError context:@"server connectivity check failed, continue starting tunnel"];
-    } else {
-        [self recordTunnelEvent:@"server connectivity check passed"];
+        NSLog(@"server connectivity check failed, continue starting tunnel");
     }
 
-    [self recordTunnelEvent:[NSString stringWithFormat:@"profile validated server=%@ port=%ld", profile.server, (long)profile.serverPort]];
     _pendingStartCompletion = completionHandler;
     [self startAllProxyServers];
     [self startPacketForwarders];
@@ -175,7 +141,6 @@
 }
 
 - (void)startAllProxyServers {
-    [self recordTunnelEvent:@"startAllProxyServers"];
     [self startShadowsocks];
     [self startHttpProxyServer];
 }
@@ -190,12 +155,10 @@
         proxyError = [TunnelError errorWithMessage:@"timeout"];
     }
     if (proxyError) {
-        [self recordTunnelError:proxyError context:[NSString stringWithFormat:@"start proxy %@ failed", name]];
         NSLog(@"start proxy: %@ error: %@", name, [proxyError localizedDescription]);
         exit(1);
         return;
     }
-    [self recordTunnelEvent:[NSString stringWithFormat:@"start proxy %@ success", name]];
 }
 
 - (void)startShadowsocks {
@@ -221,19 +184,15 @@
 - (void)startPacketForwarders {
     __weak typeof(self) weakSelf = self;
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onTun2SocksFinished) name:kTun2SocksStoppedNotification object:nil];
-    [self recordTunnelEvent:@"startPacketForwarders"];
     [self applyTunnelSettings:^(NSError *error) {
         __strong typeof(self) strongSelf = weakSelf;
         if (error == nil) {
             NSAssert(self->_socksProxyPort > 0, @"_socksProxyPort > 0");
-            [strongSelf recordTunnelEvent:[NSString stringWithFormat:@"applyTunnelSettings success socksPort=%ld httpPort=%ld", (long)self->_socksProxyPort, (long)self->_httpProxyPort]];
             [weakSelf addObserver:weakSelf forKeyPath:@"defaultPath" options:NSKeyValueObservingOptionInitial context:nil];
             [[TunnelInterface sharedInterface] startTun2Socks:(int)self->_socksProxyPort];
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                 [[TunnelInterface sharedInterface] processPackets];
             });
-        } else {
-            [strongSelf recordTunnelError:error context:@"applyTunnelSettings failed"];
         }
         if (strongSelf->_pendingStartCompletion) {
             strongSelf->_pendingStartCompletion(error);
@@ -273,11 +232,6 @@
     dnsSettings.matchDomains = @[@""];
     settings.DNSSettings = dnsSettings;
     [self setTunnelNetworkSettings:settings completionHandler:^(NSError * _Nullable error) {
-        if (error) {
-            [self recordTunnelError:error context:@"setTunnelNetworkSettings completion"];
-        } else {
-            [self recordTunnelEvent:@"setTunnelNetworkSettings success"];
-        }
         if (completionHandler) {
             completionHandler(error);
         }
@@ -317,7 +271,6 @@
 
 - (void)stop {
     NSLog(@"stoping potatso tunnel...");
-    [self recordTunnelEvent:@"stop tunnel requested"];
     [[AppProfile sharedUserDefaults] setObject:@(0) forKey:@"tunnelStatusPort"];
     [[AppProfile sharedUserDefaults] synchronize];
     [[ProxyManager sharedManager] stopHttpProxy];
@@ -325,7 +278,6 @@
 }
 
 - (void)onTun2SocksFinished {
-    [self recordTunnelEvent:@"onTun2SocksFinished"];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     if (_pendingStopCompletion) {
         _pendingStopCompletion();
