@@ -22,64 +22,41 @@
 int _internal_connectivity(const struct addrinfo *addr, int timeout_ms);
 
 int serverConnectivity(const char *host, int port, int timeout_ms) {
-    int cliSock = -1;
-
     int result = -1;
     struct addrinfo *addr = NULL;
+    char portString[16];
 
     do {
         if (host==NULL || port==0) {
             break;
         }
         struct addrinfo hints = { 0 };
-        hints.ai_flags = AI_NUMERICHOST;
         hints.ai_family = AF_UNSPEC;
         hints.ai_socktype = SOCK_STREAM;
         hints.ai_protocol = IPPROTO_TCP;
-        
-        struct hostent *he = NULL;
-        struct sockaddr_in dest_addr = { 0 };
+        snprintf(portString, sizeof(portString), "%d", port);
 
-        if (getaddrinfo(host, NULL, &hints, &addr) != 0) {
-            if ((he = gethostbyname(host)) == NULL) {
-                break;
-            }
-            
-            dest_addr.sin_family = AF_INET;
-            dest_addr.sin_port = htons(port);
-            dest_addr.sin_addr = *((struct in_addr *)he->h_addr);
+        if (getaddrinfo(host, portString, &hints, &addr) != 0) {
+            break;
         }
-        
-        if (addr) {
-            if (addr->ai_family == AF_INET) {
-                ((struct sockaddr_in *)addr->ai_addr)->sin_port = htons(port);
-            } else if (addr->ai_family == AF_INET6) {
-                ((struct sockaddr_in6 *)addr->ai_addr)->sin6_port = htons(port);
-            } else {
-                break;
+
+        for (const struct addrinfo *current = addr; current != NULL; current = current->ai_next) {
+            if (current->ai_family != AF_INET && current->ai_family != AF_INET6) {
+                continue;
             }
-            if (_internal_connectivity(addr, timeout_ms) != 0 ) {
-                break;
-            }
-        } else {
-            if ((cliSock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-                break;
-            }
-            int c = connect(cliSock, (struct sockaddr *)&dest_addr, sizeof(struct sockaddr));
-            if (c != 0) {
+            if (_internal_connectivity(current, timeout_ms) == 0 ) {
+                result = 0;
                 break;
             }
         }
-        result = 0;
+
+        if (result != 0) {
+            break;
+        }
     } while (0);
     
     if (addr) {
         freeaddrinfo(addr);
-    }
-    
-    if (cliSock != -1) {
-        close(cliSock);
-        printf("Client Sockets closed\n");
     }
 
     return result;

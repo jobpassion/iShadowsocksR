@@ -574,6 +574,20 @@
 			remoteGlobalIDString = 9BDA625A1CAE2576007F2581;
 			remoteInfo = PacketProcessor;
 		};
+		B65D34202BA7A00000024440 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3A8AC90720754396002843E0 /* MMWormhole.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 9B44A4C51B00570E00C9969A;
+			remoteInfo = "MMWormhole-iOS";
+		};
+		B65D34212BA7A00100024440 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3A8AC90720754396002843E0 /* MMWormhole.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 9B44A4C51B00570E00C9969A;
+			remoteInfo = "MMWormhole-iOS";
+		};
 		B670FD48280022A200054553 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = B6D3435C28001EBD00527D6D /* libmaxminddb.xcodeproj */;
@@ -2576,6 +2590,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				B65D34222BA7A00200024440 /* PBXTargetDependency */,
 			);
 			name = TodayWidget;
 			productName = TodayWidget;
@@ -2620,6 +2635,7 @@
 				3A739BCC2076206D0069F21C /* PBXTargetDependency */,
 				3A8780C820754A9500B96BF3 /* PBXTargetDependency */,
 				3ADE7D0220737353000F70AA /* PBXTargetDependency */,
+				B65D34232BA7A00300024440 /* PBXTargetDependency */,
 			);
 			name = PotatsoLibrary;
 			productName = PotatsoLibrary;
@@ -3310,9 +3326,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-iShadowsocksR/Pods-iShadowsocksR-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-iShadowsocksR/Pods-iShadowsocksR-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -3614,6 +3634,16 @@
 			target = 9BDA625A1CAE2576007F2581 /* PacketProcessor */;
 			targetProxy = 9BDA62601CAE2576007F2581 /* PBXContainerItemProxy */;
 		};
+		B65D34222BA7A00200024440 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "MMWormhole-iOS";
+			targetProxy = B65D34202BA7A00000024440 /* PBXContainerItemProxy */;
+		};
+		B65D34232BA7A00300024440 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "MMWormhole-iOS";
+			targetProxy = B65D34212BA7A00100024440 /* PBXContainerItemProxy */;
+		};
 		B670FD49280022A200054553 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = "libmaxminddb iOS";
@@ -3786,7 +3816,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = LEPB33WFFM;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
@@ -3811,7 +3841,7 @@
 					"@rpath/Frameworks",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"COCOAPODS\" -DDEBUG";
-				PRODUCT_BUNDLE_IDENTIFIER = com.ssrlive.issr;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jeffery.issr;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -3833,7 +3863,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = LEPB33WFFM;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
@@ -3857,7 +3887,7 @@
 					"@executable_path/Frameworks",
 					"@rpath/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.ssrlive.issr;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jeffery.issr;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -3881,7 +3911,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = LEPB33WFFM;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
@@ -3894,6 +3924,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.ssrlive.issr.$(TARGET_NAME)";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.jeffery.issr.TodayWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -3914,7 +3945,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = LEPB33WFFM;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
@@ -3927,6 +3958,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.ssrlive.issr.$(TARGET_NAME)";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.jeffery.issr.TodayWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -3946,7 +3978,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = LEPB33WFFM;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
@@ -3979,6 +4011,7 @@
 					"$(PROJECT_DIR)/PacketTunnel",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.ssrlive.issr.$(TARGET_NAME)";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.jeffery.issr.PacketTunnel;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -3996,7 +4029,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Distribution";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = LEPB33WFFM;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
@@ -4029,6 +4062,7 @@
 					"$(PROJECT_DIR)/PacketTunnel",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.ssrlive.issr.$(TARGET_NAME)";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.jeffery.issr.PacketTunnel;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
