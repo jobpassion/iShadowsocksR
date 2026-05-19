@@ -68,7 +68,7 @@
     }
     
     if (serverConnectivity(profile.server.UTF8String, (int)profile.serverPort, 10000) != 0){
-        NSLog(@"server connectivity check failed, continue starting tunnel");
+        // NSLog(@"server connectivity check failed, continue starting tunnel");
     }
 
     _pendingStartCompletion = completionHandler;

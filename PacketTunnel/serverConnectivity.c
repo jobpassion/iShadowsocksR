@@ -66,31 +66,31 @@ int _internal_connectivity(const struct addrinfo *addr, int timeout_ms) {
     int cliSock = -1, arg, result = -1;
     do {
         if ((cliSock = socket(addr->ai_family, addr->ai_socktype, 0)) == -1) {
-            printf("Socket Error: %d\n", errno);
+            // printf("Socket Error: %d\n", errno);
             break;
         }
-        printf("Client Socket %d created\n", cliSock);
+        // printf("Client Socket %d created\n", cliSock);
         
         // Set non-blocking
         if ((arg = fcntl(cliSock, F_GETFL, NULL)) < 0) {
-            fprintf(stderr, "Error fcntl(..., F_GETFL) (%s)\n", strerror(errno));
+            // fprintf(stderr, "Error fcntl(..., F_GETFL) (%s)\n", strerror(errno));
             break;
         }
         arg |= O_NONBLOCK;
         if (fcntl(cliSock, F_SETFL, arg) < 0) {
-            fprintf(stderr, "Error fcntl(..., F_SETFL) (%s)\n", strerror(errno));
+            // fprintf(stderr, "Error fcntl(..., F_SETFL) (%s)\n", strerror(errno));
             break;
         }
         
         if (connect(cliSock, addr->ai_addr, addr->ai_addrlen) >= 0) {
-            printf("Client Connection created successfully\n");
+            // printf("Client Connection created successfully\n");
             result = 0;
             break;
         }
         
         if (errno == EINPROGRESS) {
             int success = 0;
-            fprintf(stderr, "EINPROGRESS in connect() - selecting\n");
+            // fprintf(stderr, "EINPROGRESS in connect() - selecting\n");
             do {
                 int res;
                 struct timeval tv;
@@ -101,7 +101,7 @@ int _internal_connectivity(const struct addrinfo *addr, int timeout_ms) {
                 FD_SET(cliSock, &myset);
                 res = select(cliSock + 1, NULL, &myset, NULL, &tv);
                 if (res < 0 && errno != EINTR) {
-                    fprintf(stderr, "Error connecting %d - %s\n", errno, strerror(errno));
+                    // fprintf(stderr, "Error connecting %d - %s\n", errno, strerror(errno));
                     break;
                 }
                 else if (res > 0) {
@@ -109,19 +109,19 @@ int _internal_connectivity(const struct addrinfo *addr, int timeout_ms) {
                     socklen_t lon = sizeof(int);
                     // Socket selected for write
                     if (getsockopt(cliSock, SOL_SOCKET, SO_ERROR, (void *)(&valopt), &lon) < 0) {
-                        fprintf(stderr, "Error in getsockopt() %d - %s\n", errno, strerror(errno));
+                        // fprintf(stderr, "Error in getsockopt() %d - %s\n", errno, strerror(errno));
                         break;
                     }
                     // Check the value returned...
                     if (valopt) {
-                        fprintf(stderr, "Error in delayed connection() %d - %s\n", valopt, strerror(valopt));
+                        // fprintf(stderr, "Error in delayed connection() %d - %s\n", valopt, strerror(valopt));
                         break;
                     }
                     success = 1;
                     break;
                 }
                 else {
-                    fprintf(stderr, "Timeout in select() - Cancelling!\n");
+                    // fprintf(stderr, "Timeout in select() - Cancelling!\n");
                     break;
                 }
             } while (1);
@@ -129,7 +129,7 @@ int _internal_connectivity(const struct addrinfo *addr, int timeout_ms) {
                 break;
             }
         } else {
-            fprintf(stderr, "Error connecting %d - %s\n", errno, strerror(errno));
+            // fprintf(stderr, "Error connecting %d - %s\n", errno, strerror(errno));
             break;
         }
         result = 0;
@@ -137,7 +137,7 @@ int _internal_connectivity(const struct addrinfo *addr, int timeout_ms) {
     
     if (cliSock != -1) {
         close(cliSock);
-        printf("Client Sockets closed\n");
+        // printf("Client Sockets closed\n");
     }
     
     return result;
@@ -152,7 +152,7 @@ int convertHostNameToIpString (const char *host, char *ipString, size_t len) {
         struct hostent *he;
 
         if ((he = gethostbyname(host)) == NULL) {
-            printf("Couldn't get hostname\n");
+            // printf("Couldn't get hostname\n");
             break;
         }
 
