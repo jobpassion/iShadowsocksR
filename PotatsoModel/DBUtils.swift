@@ -10,7 +10,7 @@ import Realm
 import RealmSwift
 import CommUtils
 
-private let version: UInt64 = 18
+private let version: UInt64 = 19
 
 open class DBUtils {
     
@@ -423,4 +423,3 @@ extension ConfigurationGroup {
     }
 
 }
-

@@ -7,6 +7,7 @@
 
 import Foundation
 import PotatsoModel
+import PotatsoLibrary
 
 protocol HomePresenterProtocol: class {
     func handleRefreshUI()
@@ -103,15 +104,9 @@ class HomePresenter: NSObject {
     }
 
     func addRuleSet() {
-        let destVC: UIViewController
-        if DBUtils.countOf(type: RuleSet.self) == 0 {
-            destVC = RuleSetConfigurationViewController() { [unowned self] ruleSet in
-                self.appendRuleSet(ruleSet)
-            }
-        }else {
-            destVC = RuleSetListViewController { [unowned self] ruleSet in
-                self.appendRuleSet(ruleSet)
-            }
+        // Always use the list so an empty installation can create a rule subscription too.
+        let destVC = RuleSetListViewController { [unowned self] ruleSet in
+            self.appendRuleSet(ruleSet)
         }
         vc.navigationController?.pushViewController(destVC, animated: true)
     }
@@ -122,6 +117,7 @@ class HomePresenter: NSObject {
         }
         do {
             try ConfigurationGroup.appendRuleSet(forGroupId: group.uuid, rulesetId: ruleSet.uuid)
+            try Manager.sharedManager.regenerateConfigFiles()
             self.delegate?.handleRefreshUI()
         }catch {
             self.vc.showTextHUD("\("Fail to add ruleset".localized()): \((error as NSError).localizedDescription)", dismissAfterDelay: 1.5)

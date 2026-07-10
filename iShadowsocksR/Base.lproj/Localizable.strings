@@ -10,6 +10,7 @@
 "Add Config Group" = "Add Config Group";
 "Add Proxy" = "Add Proxy";
 "Add Rule" = "Add Rule";
+"Add Rule Subscription" = "Add Rule Subscription";
 "Add Rule Set" = "Add Rule Set";
 "Add a new proxy" = "Add a new proxy";
 "BUY" = "BUY";
@@ -123,6 +124,12 @@
 "Rule" = "Rule";
 "Rule Set" = "Rule Set";
 "Rule Set Name" = "Rule Set Name";
+"Subscription URL" = "Subscription URL";
+"Download" = "Download";
+"Downloading rule subscription..." = "Downloading rule subscription...";
+"Downloaded %d rules" = "Downloaded %d rules";
+"Fail to download rule subscription" = "Failed to download rule subscription";
+"Invalid subscription URL" = "Invalid subscription URL";
 "Rules" = "Rules";
 "SSR Obfs Param" = "SSR Obfs Param";
 "SSR Protocol Param" = "SSR Protocol Param";

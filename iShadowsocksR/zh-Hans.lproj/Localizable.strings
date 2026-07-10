@@ -11,6 +11,7 @@
 "Add Config Group" = "添加配置组";
 "Add Proxy" = "添加代理";
 "Add Rule" = "添加规则";
+"Add Rule Subscription" = "添加规则订阅";
 "Add Rule Set" = "添加规则组";
 "Add a new proxy" = "添加新代理";
 "BUY" = "购买";
@@ -124,6 +125,12 @@
 "Rule" = "规则";
 "Rule Set" = "规则组";
 "Rule Set Name" = "规则组名称";
+"Subscription URL" = "订阅 URL";
+"Download" = "下载";
+"Downloading rule subscription..." = "正在下载规则订阅...";
+"Downloaded %d rules" = "已下载 %d 条规则";
+"Fail to download rule subscription" = "下载规则订阅失败";
+"Invalid subscription URL" = "无效的订阅 URL";
 "Rules" = "规则";
 "SSR Obfs Param" = "SSR 混淆插件参数";
 "SSR Protocol Param" = "SSR 协议插件参数";

@@ -54,8 +54,39 @@ class RuleSetConfigurationViewController: FormViewController {
         super.viewWillAppear(animated)
         if editable {
             navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(save))
+        } else if ruleSet.isSubscribe {
+            navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .refresh, target: self, action: #selector(refreshSubscription))
         }
         tableView?.reloadSections(IndexSet(integer: 1), with: .none)
+    }
+
+    @objc func refreshSubscription() {
+        guard !ruleSet.subscriptionURL.isEmpty else {
+            showTextHUD("Invalid subscription URL".localized(), dismissAfterDelay: 1.5)
+            return
+        }
+        showProgreeHUD("Downloading rule subscription...".localized())
+        RuleSet.downloadSubscription(from: ruleSet.subscriptionURL, defaultAction: ruleSet.subscriptionAction) { rules, error in
+            DispatchQueue.main.async {
+                self.hideHUD()
+                guard let rules = rules, error == nil else {
+                    self.showTextHUD("Fail to download rule subscription".localized() + ": \(error?.localizedDescription ?? "")", dismissAfterDelay: 2.0)
+                    return
+                }
+                // Commit only after a full successful download and parse; prior rules remain active on failure.
+                self.ruleSet.rules = rules
+                self.ruleSet.remoteUpdatedAt = Date().timeIntervalSince1970
+                do {
+                    try DBUtils.add(self.ruleSet)
+                    try Manager.sharedManager.regenerateConfigFiles()
+                    self.rules = rules
+                    self.generateForm()
+                    self.showTextHUD(String(format: "Downloaded %d rules".localized(), rules.count), dismissAfterDelay: 1.5)
+                } catch {
+                    self.showTextHUD("Fail to save config.".localized() + ": \(error.localizedDescription)", dismissAfterDelay: 2.0)
+                }
+            }
+        }
     }
 
     func generateForm() {

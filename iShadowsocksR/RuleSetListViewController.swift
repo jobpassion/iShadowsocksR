@@ -67,8 +67,61 @@ class RuleSetListViewController: UIViewController, UITableViewDataSource, UITabl
     }
 
     @objc func add() {
-        let vc = RuleSetConfigurationViewController()
-        navigationController?.pushViewController(vc, animated: true)
+        let alert = UIAlertController(title: "Add Rule Set".localized(), message: nil, preferredStyle: .actionSheet)
+        alert.addAction(UIAlertAction(title: "Create manually".localized(), style: .default) { _ in
+            self.navigationController?.pushViewController(RuleSetConfigurationViewController(), animated: true)
+        })
+        alert.addAction(UIAlertAction(title: "Add Rule Subscription".localized(), style: .default) { _ in self.addSubscription() })
+        alert.addAction(UIAlertAction(title: "Cancel".localized(), style: .cancel))
+        alert.popoverPresentationController?.barButtonItem = navigationItem.rightBarButtonItem
+        present(alert, animated: true)
+    }
+
+    func addSubscription() {
+        let alert = UIAlertController(title: "Add Rule Subscription".localized(), message: nil, preferredStyle: .alert)
+        alert.addTextField { $0.placeholder = "Name".localized(); $0.text = "GFW List" }
+        alert.addTextField {
+            $0.placeholder = "Subscription URL".localized()
+            $0.text = "https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/gfw.txt"
+            $0.keyboardType = .URL
+            $0.autocapitalizationType = .none
+            $0.autocorrectionType = .no
+        }
+        alert.addAction(UIAlertAction(title: "Cancel".localized(), style: .cancel))
+        alert.addAction(UIAlertAction(title: "Download".localized(), style: .default) { _ in
+            let name = alert.textFields?[0].text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let url = alert.textFields?[1].text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            guard !name.isEmpty else { self.showTextHUD("Name can't be empty".localized(), dismissAfterDelay: 1.5); return }
+            self.downloadSubscription(name: name, url: url)
+        })
+        present(alert, animated: true)
+    }
+
+    func downloadSubscription(name: String, url: String) {
+        showProgreeHUD("Downloading rule subscription...".localized())
+        RuleSet.downloadSubscription(from: url, defaultAction: .Proxy) { rules, error in
+            DispatchQueue.main.async {
+                self.hideHUD()
+                guard let rules = rules, error == nil else {
+                    self.showTextHUD("Fail to download rule subscription".localized() + ": \(error?.localizedDescription ?? "")", dismissAfterDelay: 2.0)
+                    return
+                }
+                let ruleSet = RuleSet()
+                ruleSet.name = name
+                ruleSet.isSubscribe = true
+                ruleSet.subscriptionURL = url
+                ruleSet.subscriptionAction = .Proxy
+                ruleSet.rules = rules
+                ruleSet.remoteUpdatedAt = Date().timeIntervalSince1970
+                do {
+                    try DBUtils.add(ruleSet)
+                    self.showTextHUD(String(format: "Downloaded %d rules".localized(), rules.count), dismissAfterDelay: 1.5)
+                    if let callback = self.chooseCallback { callback(ruleSet); self.close() }
+                } catch {
+                    self.showTextHUD("Fail to save config.".localized() + ": \(error.localizedDescription)", dismissAfterDelay: 2.0)
+                }
+            }
+        }
     }
 
     func showRuleSetConfiguration(_ ruleSet: RuleSet?) {
